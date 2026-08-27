@@ -12,7 +12,6 @@ import com.localebro.okhttpprofiler.OkHttpProfilerInterceptor;
 import okhttp3.CipherSuite;
 import okhttp3.ConnectionPool;
 import okhttp3.ConnectionSpec;
-import okhttp3.Dns;
 import okhttp3.OkHttpClient;
 import okhttp3.OkHttpClient.Builder;
 import okhttp3.Protocol;
@@ -25,8 +24,6 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 import java.net.Authenticator;
-import java.net.Inet4Address;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.PasswordAuthentication;
 import java.net.Proxy;
@@ -278,6 +275,9 @@ final class OkHttpCommons {
                     //forceIPv4Dns(okBuilder);
                     preferIPv4Dns(okBuilder); // alt method
                     break;
+                case GlobalPreferences.DNS_TYPE_IPV4_ONLY:
+                    forceIPv4Dns(okBuilder);
+                    break;
                 case GlobalPreferences.DNS_TYPE_GOOGLE:
                     // May help with 'java.net.ProtocolException: Too many follow-up requests: 21'
                     forceGoogleDns(okBuilder);
@@ -345,13 +345,7 @@ final class OkHttpCommons {
     }
 
     private static void forceIPv4Dns(OkHttpClient.Builder okBuilder) {
-        okBuilder.dns(hostname -> {
-            List<InetAddress> lookup = Dns.SYSTEM.lookup(hostname);
-            List<InetAddress> filter = Helpers.filter(
-                lookup, value -> value instanceof Inet4Address
-            );
-            return filter != null ? filter : lookup;
-        });
+        okBuilder.dns(new OkHttpDNSSelector(OkHttpDNSSelector.IPvMode.IPV4_ONLY));
     }
 
     private static void forceGoogleDns(OkHttpClient.Builder okBuilder) {

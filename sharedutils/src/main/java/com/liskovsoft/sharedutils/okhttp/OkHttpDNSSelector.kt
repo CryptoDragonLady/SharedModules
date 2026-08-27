@@ -31,16 +31,7 @@ class OkHttpDNSSelector(private val mode: IPvMode) : Dns {
     }
 
     override fun lookup(hostname: String): List<InetAddress> {
-        var addresses = Dns.SYSTEM.lookup(hostname)
-
-        // More memory efficient
-        addresses = when (mode) {
-            IPvMode.IPV6_FIRST -> addresses.sortedBy { it is Inet4Address }
-            IPvMode.IPV4_FIRST -> addresses.sortedBy { it is Inet6Address }
-            IPvMode.IPV6_ONLY -> addresses.filter { it is Inet6Address }
-            IPvMode.IPV4_ONLY -> addresses.filter { it is Inet4Address }
-            IPvMode.SYSTEM -> addresses
-        }
+        val addresses = Dns.SYSTEM.lookup(hostname)
 
         // More robust on Android TV (preserve ordering)?
         //addresses = when (mode) {
@@ -62,7 +53,21 @@ class OkHttpDNSSelector(private val mode: IPvMode) : Dns {
 
         //logger.fine("DJMOKHTTP ($hostname): " + addresses.joinToString(", ") { it.toString() })
 
-        return addresses
+        return selectAddresses(addresses, mode)
+    }
+
+    companion object {
+        @JvmStatic
+        fun selectAddresses(addresses: List<InetAddress>, mode: IPvMode): List<InetAddress> {
+            // More memory efficient
+            return when (mode) {
+                IPvMode.IPV6_FIRST -> addresses.sortedBy { it is Inet4Address }
+                IPvMode.IPV4_FIRST -> addresses.sortedBy { it is Inet6Address }
+                IPvMode.IPV6_ONLY -> addresses.filter { it is Inet6Address }
+                IPvMode.IPV4_ONLY -> addresses.filter { it is Inet4Address }
+                IPvMode.SYSTEM -> addresses
+            }
+        }
     }
 
     private fun partition(addresses: List<InetAddress>) = addresses.partition { it is Inet4Address }
