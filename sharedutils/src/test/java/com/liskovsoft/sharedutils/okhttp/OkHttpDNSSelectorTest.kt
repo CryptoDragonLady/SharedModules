@@ -31,6 +31,16 @@ class OkHttpDNSSelectorTest {
     }
 
     @Test
+    fun ipv6OnlyDropsEveryIpv4Address() {
+        val addresses = listOf(ipv4First, ipv6, ipv4Second)
+
+        assertEquals(
+            listOf(ipv6),
+            OkHttpDNSSelector.selectAddresses(addresses, IPvMode.IPV6_ONLY)
+        )
+    }
+
+    @Test
     fun systemPreservesResolverOrder() {
         val addresses = listOf(ipv6, ipv4First, ipv4Second)
 

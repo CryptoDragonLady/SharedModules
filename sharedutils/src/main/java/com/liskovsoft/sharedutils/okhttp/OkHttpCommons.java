@@ -267,21 +267,15 @@ final class OkHttpCommons {
         // NOTE: replaces the DNS above
         if (GlobalPreferences.sInstance != null) {
             int dnsType = GlobalPreferences.sInstance.getPreferredDnsType();
+            OkHttpDNSSelector.IPvMode ipvMode = OkHttpDnsModeResolver.resolve(dnsType);
 
-            switch (dnsType) {
-                case GlobalPreferences.DNS_TYPE_IPV4:
-                    // Cause hangs and crashes (especially on Android 8 devices or Dune HD)
-                    // NOTE: useful only on api <= 19
-                    //forceIPv4Dns(okBuilder);
-                    preferIPv4Dns(okBuilder); // alt method
-                    break;
-                case GlobalPreferences.DNS_TYPE_IPV4_ONLY:
-                    forceIPv4Dns(okBuilder);
-                    break;
-                case GlobalPreferences.DNS_TYPE_GOOGLE:
-                    // May help with 'java.net.ProtocolException: Too many follow-up requests: 21'
-                    forceGoogleDns(okBuilder);
-                    break;
+            if (ipvMode != OkHttpDNSSelector.IPvMode.SYSTEM) {
+                okBuilder.dns(new OkHttpDNSSelector(ipvMode));
+            }
+
+            if (dnsType == GlobalPreferences.DNS_TYPE_GOOGLE) {
+                // May help with 'java.net.ProtocolException: Too many follow-up requests: 21'
+                forceGoogleDns(okBuilder);
             }
         }
         //setupProxy(okBuilder); // proxy configured in system props
@@ -337,15 +331,6 @@ final class OkHttpCommons {
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
         logging.setLevel(HttpLoggingInterceptor.Level.BODY);
         okBuilder.addInterceptor(logging);
-    }
-
-    private static void preferIPv4Dns(OkHttpClient.Builder okBuilder) {
-        okBuilder.dns(new OkHttpDNSSelector(OkHttpDNSSelector.IPvMode.IPV4_FIRST));
-        //okBuilder.dns(new PreferIpv4Dns());
-    }
-
-    private static void forceIPv4Dns(OkHttpClient.Builder okBuilder) {
-        okBuilder.dns(new OkHttpDNSSelector(OkHttpDNSSelector.IPvMode.IPV4_ONLY));
     }
 
     private static void forceGoogleDns(OkHttpClient.Builder okBuilder) {

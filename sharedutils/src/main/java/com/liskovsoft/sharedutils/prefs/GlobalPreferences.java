@@ -16,6 +16,7 @@ final public class GlobalPreferences extends SharedPreferencesBase {
     public static final int DNS_TYPE_IPV4 = 1;
     public static final int DNS_TYPE_GOOGLE = 2;
     public static final int DNS_TYPE_IPV4_ONLY = 3;
+    public static final int DNS_TYPE_IPV6_ONLY = 4;
     public static final String PLAYLIST_TYPE_RECOMMENDATIONS = "playlist_type_recommendations";
     public static final String PLAYLIST_TYPE_SUBSCRIPTIONS = "playlist_type_subscriptions";
     public static final String PLAYLIST_TYPE_HISTORY = "playlist_type_history";
